@@ -1,0 +1,20 @@
+{
+    "name": "alquemie/repeater2-for-gravity-forms",
+    "description": "Plugin that enables a repeater field group for Gravity Forms",
+    "version": "2.0.3",
+    "authors": [
+        {
+            "name": "Chris Carrel",
+            "email": "support@alquemie.net"
+        },
+        {
+            "name": "Ciprian Popescu",
+            "homepage": "https://getbutterfly.com/"
+        }
+    ],
+    "license": "GPL-3.0+",
+    "type": "wordpress-plugin",
+    "config": {
+        "vendor-dir": "lib"
+    }
+}
