@@ -1,6 +1,6 @@
-var gfRepeater_debug = false;
 var gfRepeater_repeater2s = {};
 var gfRepeater_submitted = false;
+var gfRepeater_repeater2s_is_set = false;
 
 /*
 	gfRepeater_getRepeaters()
@@ -25,8 +25,7 @@ function gfRepeater_getRepeaters() {
 		var startElement;
 
 		// Remove ajax action from form because ajax enabled forms are not yet supported.
-		if (jQuery(form).attr('action') == '/ajax-test') { jQuery(form).removeAttr('action'); }
-
+		// if (jQuery(form).attr('action') == '/ajax-test') { jQuery(form).removeAttr('action'); }
 		jQuery(this).find('.gfield').each(function(){
 			if (repeater2Found == 0) {
 				if (jQuery(this).has('.ginput_container_repeater2').length) {
@@ -34,11 +33,9 @@ function gfRepeater_getRepeaters() {
 
 					repeater2Id += 1;
 
-					if (gfRepeater_debug) { console.log('Form #'+formId+' - Repeater #'+repeater2Id+' - Start: '+jQuery(this).attr('id')); }
-
 					startElement = jQuery(this);
 					dataElement = startElement.find('.gform_repeater2');
-
+					
 					repeater2Info = jQuery(dataElement).val();
 					if (repeater2Info) { repeater2Info = JSON.parse(repeater2Info); }
 
@@ -62,11 +59,6 @@ function gfRepeater_getRepeaters() {
 				if (jQuery(this).has('.ginput_container_repeater2').length) { return false; }
 				if (jQuery(this).has('.ginput_container_repeater2-end').length) {
 					// Repeater End
-
-					if (gfRepeater_debug) {
-						console.log('Form #'+formId+' - Repeater #'+repeater2Id+' - End: '+jQuery(this).attr('id'));
-						console.log('Form #'+formId+' - Repeater #'+repeater2Id+' - Children Found: '+(repeater2ChildCount));
-					}
 
 					var repeater2Controllers = {};
 					var endElement = jQuery(this);
@@ -179,8 +171,6 @@ function gfRepeater_getRepeaters() {
 						conditionalLogic['skip'] = [];
 					}
 
-					if (gfRepeater_debug) { console.log('Form #'+formId+' - Repeater #'+repeater2Id+' - Child #'+repeater2ChildCount+' - Found: '+childId); }
-
 					jQuery(this).find(':input').each(function(){
 						childInputCount += 1;
 						var inputElement = jQuery(this);
@@ -216,8 +206,6 @@ function gfRepeater_getRepeaters() {
 							defaultValue:inputDefaultValue,
 							prePopulate:inputPrePopulate
 						};
-
-						if (gfRepeater_debug) { console.log('Form #'+formId+' - Repeater #'+repeater2Id+' - Child #'+repeater2ChildCount+' - Input Found: '+inputId); }
 					});
 
 					repeater2Children[repeater2ChildCount] = {
@@ -238,7 +226,6 @@ function gfRepeater_getRepeaters() {
 			}
 		});
 
-		if (gfRepeater_debug) { console.log('Form #'+formId+' - Repeaters Found: '+(repeater2Id)); }
 		if (repeater2Found !== 0) { return false; }
 
 		if (repeater2s) {
@@ -357,6 +344,7 @@ function gfRepeater_setRepeaterChildAttrs(formId, repeater2Id, repeater2ChildEle
 					.removeClass('hasDatepicker')
 					.datepicker('destroy')
 					.siblings('.ui-datepicker-trigger').remove();
+				
 			}
 
 			if (gfRepeater_submitted && checkValidation) {
@@ -416,12 +404,15 @@ function gfRepeater_resetRepeaterChildrenAttrs(formId, repeater2Id) {
 	var x = 0;
 
 	jQuery(repeater2Children).each(function(){
+		
+
 		if (jQuery(this).attr('data-repeater2-childid') == 1) {
 			x += 1;
 		}
 
 		if (jQuery(this).attr('data-repeater2-repeatid') !== x) {
 			gfRepeater_setRepeaterChildAttrs(formId, repeater2Id, jQuery(this), x);
+			
 		}
 	});
 }
@@ -622,7 +613,7 @@ function gfRepeater_repeatRepeater(formId, repeater2Id) {
 		gfRepeater_setRepeaterChildAttrs(formId, repeater2Id, clonedElement);
 
 		clonedElement.insertAfter(lastElement);
-
+		lastElement.find('.datepicker').removeClass('initialized');
 		lastElement = clonedElement;
 	});
 
@@ -638,7 +629,6 @@ function gfRepeater_repeatRepeater(formId, repeater2Id) {
 		.parents('form')
 		.trigger('gform_repeater2_after_repeat', [repeater2Id, repeatId]);
 
-	if (gfRepeater_debug) { console.log('Form #'+formId+' - Repeater #'+repeater2Id+' - repeated'); }
 }
 
 /*
@@ -673,8 +663,6 @@ function gfRepeater_unrepeatRepeater(formId, repeater2Id, repeatId) {
 	jQuery(repeater2['controllers']['start'])
 		.parents('form')
 		.trigger('gform_repeater2_after_unrepeat', [repeater2Id, repeatId]);
-
-	if (gfRepeater_debug) { console.log('Form #'+formId+' - Repeater #'+repeater2Id+' - Repeat #'+repeatId+' - unrepeated'); }
 }
 
 /*
@@ -888,7 +876,7 @@ function gfRepeater_getInputValue(inputElement) {
 */
 function gfRepeater_setInputValue(inputElement, inputValue) {
 	if (inputElement.is(':checkbox, :radio')) {
-		if (inputValue) { inputElement.prop('checked', true) } else { inputElement.prop('checked', false) }
+		if (inputValue == 'on' || inputElement.prop('value') === inputValue) { inputElement.prop('checked', true) } else { inputElement.prop('checked', false) }
 	} else {
 		inputElement.val(inputValue);
 	}
@@ -944,6 +932,7 @@ function gfRepeater_start() {
 			if (repeater2['controllers']['data'].attr('data-required')) { repeater2['controllers']['start'].addClass('gfield_contains_required'); }
 
 			jQuery.each(repeater2['children'], function(key, value){
+				
 				gfRepeater_setRepeaterChildAttrs(formId, repeater2Id, jQuery(repeater2['children'][key]['element']), 1);
 				if (this.conditionalLogic) { gfRepeater_conditionalLogic_set(formId, repeater2Id, key, 1); }
 			});
@@ -966,22 +955,15 @@ function gfRepeater_start() {
 }
 
 // Initiation after gravity forms has rendered.
-jQuery(document).bind('gform_post_render', function(){
-	if (gfRepeater_getRepeaters()) {
-		gfRepeater_start();
-		jQuery(window).trigger('gform_repeater2_init_done');
-	} else {
-		console.log('There was an error with one of your repeater2s. This is usually caused by forgetting to include a repeater2-end field or by trying to nest repeater2s.');
+// This will fire each time a form is rendered, but we only need it the first time.
+jQuery(document).bind('gform_post_render', function() {
+	if(!gfRepeater_repeater2s_is_set) {
+		if (gfRepeater_getRepeaters()) {
+			gfRepeater_start();
+			jQuery(window).trigger('gform_repeater2_init_done');
+		} else {
+			console.log('There was an error with one of your repeater2s. This is usually caused by forgetting to include a repeater2-end field or by trying to nest repeater2s.');
+		}
+		gfRepeater_repeater2s_is_set = true;
 	}
 });
-
-// Debug shortcuts
-if (gfRepeater_debug) {
-	jQuery(window).keydown(function(event){
-		// Up Arrow - Prints the contents of gfRepeater_repeater2s into the console.
-		if (event.which == 38) { console.log(gfRepeater_repeater2s); }
-
-		// Down Arrow - Prints the captured form values into the console.
-		if (event.which == 40) { console.log(jQuery.captures()); }
-	});
-}
